@@ -1,14 +1,32 @@
   SOLID PRINCIPLES
   ------------------
-  This principles helps us to write code easier , clean , flexible ,to understand,  test and maintain
+  SOLID PRINCIPLES
 
+  These principles help us write code that is:
+
+  1) Clean
+
+  2) Flexible
+
+  3) Easy to understand
+
+  4) Easy to test
+
+  5) Easy to maintain
+
+==================================================================================
   S stands for Single Responsibility Principle (SRP)
   "One class ----> One Job"
-  Why ?
+  One class need to have only one responsiblity.
 
-  Because each operation has a different reason to change.
+  Why ?
+  Ans:- Because each operation has a different reason to change.
   Splitting improves maintainability, readabiltiy, testing and reduces
   side effects.
+
+  Ans:- Because every responsibility has a different reason to change.
+  If one class handles multiple responsibilities, it will break for multiple reasons.
+
 
   Let us take an example we have UserService Class have multiple jobs
    1) Save User
@@ -21,28 +39,242 @@
    Report format changes
 
 
+   --------------------- Bad Example --------------------
+   class UserService{
+        public void saveUser(){
+
+        }
+        public void sendEmail(){
+
+        }
+        public void generateReport(){
+
+        }
+   }
+
+ ---------------- Good Example ------------------
+
+   class UserRepo{
+        public void save(){
+
+        }
+   }
+
+   class EmailService{
+        public void sendEmail(){
+
+        }
+   }
+
+   class ReportRepo{
+        public void generateReport(){
+
+        }
+   }
+
+
+=================================================================================*
 
    O stands for Open/Closed Principle (ocp)
    "Open for extension closed for modification"
 
+
    Adding new Behaviour without rewriting the existing code.
 
-      We should not make CameraService Class
-      we make a CameraService interface we implement with brand classes
+  We should not make CameraService Class
+  we make a CameraService interface we implement with brand classes
 
+Let take a scenario
+We support multiple camera brands:
+* Hikvision
+* Dahua
+* Cp Plus
 
+If we created a class
 
+class CameraService {
+   void connect(String brand){
+	   if(brand.equals("Hikvision")){
+
+	   }
+	   else if(brand.equals("Cp Plus")){
+
+	   }
+	   else if(brand.equals("Dahua")){
+
+	   }
+   }
+}
+
+for every new brand, we need to modify the class. That's Fragile.
+
+Proper Design
+We Create a interface for Cameras and we implement with specific brand classes
+
+interface CameraBrand{
+	void connect();
+}
+
+class HikivisionCamera implements CameraBrand {
+
+}
+class CpplusCamera implements CameraBrand {
+
+}
+class DahuaCamera implements CameraBrand{
+
+}
+
+No modification required.
+Only extension.
+================================================================================
    L stands for Liskov Substitution Principle(LSP)
    "Child classes must behave like parent classes."
 
-
+================================================================================
    I Stands for Interface Segregation Principle (ISP)
    "Don't force classes to implement things they don't use."
 
+   Suppose we have CameraService interface in that we perform some operations
+   1) Camera with mic
+   2) Camera with nightvision
+   3) Camera can rotate
+
+   we should not implement all this functionality in one interface because
+   some cameras can rotate|| availble mic || nightvision or not
+   If created by we don't use them in that but still we need to implement
+
+   so make them separate interfaces so according to that we can implement
+
+---------- BAD Example -----------
+   interface Camera{
+        void stream();
+        void rotate();
+        void enableNightvision();
+        void communicate();
+   }
+-----------Good example -------------
+
+	interface Streamble{
+	    void Stream();
+	}
+	interface Rotatable{
+		void rotate();
+	}
+	interface NightVisionCapable{
+		void enableNightVision();
+	}
+	interface Speaker{
+		void communicate();
+	}
+
+
+so using this interface according we can implement with our specific cameras
+
+================================================================================
    D stands for Dependency Inversion Principle
-   "
+
+   "High-level modules should depends on abstractions, not concrete classes"
+   High-level modules should not depend on low-level modules.
+   Both should depend on abstractions.
+
+   And
+
+   Abstractions should not depend on details.
+   Details should depends on abstractions
+
+   Example:-
+   class CameraController {
+     AwsStorage storage = new AwsStorage();
+
+     void record(Video video){
+        storage.save(video);
+     }
+
+   }
+
+   what happening here ?
+   * CameraController is a high-level module (business logic)
+   * AwsStorage is a low-level module (implementation detail)
 
 
 
+✅ Correct Design
+interface Storage {
+    void save(Video video);
+}
+
+class AwsStorage implements Storage {
+    public void save(Video video) {}
+}
+
+class AzureStorage implements Storage {
+    public void save(Video video) {}
+}
+
+Now inject dependency:
+
+class CameraController {
+
+    private Storage storage;
+
+    CameraController(Storage storage) {
+        this.storage = storage;
+    }
+
+    void record(Video video) {
+        storage.save(video);
+    }
+}
+
+Usage:
+
+new CameraController(new AwsStorage());
+new CameraController(new AzureStorage());
+
+
+
+The Core Idea (No Code)
+
+High-level = policy / business rules
+Low-level = implementation / technical details
+
+Examples of low-level:
+
+Database
+
+Email sender
+
+SMS gateway
+
+File storage
+
+Logger
+
+Payment gateway
+
+Business logic should not be married to these.
+
+Why This Matters
+
+If you don’t follow DIP:
+
+Testing becomes hard
+
+Switching technology becomes painful
+
+Code becomes tightly coupled
+
+System becomes rigid
+
+If you follow DIP:
+
+You can swap implementations easily
+
+You can unit test using mocks
+
+System becomes flexible
+
+Maintenance cost drops
 
 
