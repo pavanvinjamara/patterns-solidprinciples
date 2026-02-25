@@ -1,0 +1,48 @@
+  SOLID PRINCIPLES
+  ------------------
+  This principles helps us to write code easier , clean , flexible ,to understand,  test and maintain
+
+  S stands for Single Responsibility Principle (SRP)
+  "One class ----> One Job"
+  Why ?
+
+  Because each operation has a different reason to change.
+  Splitting improves maintainability, readabiltiy, testing and reduces
+  side effects.
+
+  Let us take an example we have UserService Class have multiple jobs
+   1) Save User
+   2) sendEmail
+   3) generateReport
+
+   Now this class changes if:
+   DB changes ->(Sql to MongoDB)
+   Email logic changes
+   Report format changes
+
+
+
+   O stands for Open/Closed Principle (ocp)
+   "Open for extension closed for modification"
+
+   Adding new Behaviour without rewriting the existing code.
+
+      We should not make CameraService Class
+      we make a CameraService interface we implement with brand classes
+
+
+
+   L stands for Liskov Substitution Principle(LSP)
+   "Child classes must behave like parent classes."
+
+
+   I Stands for Interface Segregation Principle (ISP)
+   "Don't force classes to implement things they don't use."
+
+   D stands for Dependency Inversion Principle
+   "
+
+
+
+
+
