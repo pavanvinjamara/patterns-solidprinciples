@@ -131,6 +131,72 @@ Only extension.
    L stands for Liskov Substitution Principle(LSP)
    "Child classes must behave like parent classes."
 
+   Think we created a class Camera and in that we have two methods hdd recording and non-hdd recording
+
+   class Camera{
+        public void record(){
+        }
+        public void hddRecord(){
+        }
+   }
+
+   we have a hdd camera and non-hdd camera
+   class HDDCamera extends Camera{
+
+   }
+   class NonHDDCamera extends Camera{
+   }
+
+
+   If we create instance for both non hdd camera cannot implement hdd record
+   It fails there so here comes the LSP Rule
+
+   The flaw
+   You forced every camera to have hddRecord().
+   But a NonHDDCamera does not support HDD recording.
+
+   Camera cam = new NonHDDCamera();
+   cam.hddRecord();
+	Now you have only two bad choices:
+	Throw an exception ❌
+	Leave the method empty ❌
+	Both mean the child class cannot behave like the parent, which violates LSP.
+	Your reasoning is right, but the explanation should clearly show the failure.
+
+	we need to design correct----
+	class Camera {
+	    public void record() {
+	        System.out.println("Recording video");
+	    }
+	}
+
+	class HDDCamera extends Camera {
+        public void hddRecord() {
+            System.out.println("Recording to HDD");
+        }
+    }
+    class NonHDDCamera extends Camera {
+
+    }
+
+    Camera cam1 = new HDDCamera();
+    cam1.record();
+
+    Camera cam2 = new NonHDDCamera();
+    cam2.record();
+
+    HDDCamera hddCam = new HDDCamera();
+    hddCam.hddRecord();
+
+	now whether the camera is hdd or not depends on that we can use the class and not breaks lsp rule.
+
+	Suppose we design a Camera class with methods record() and hddRecord().
+    But not all cameras support HDD recording.
+    If a NonHDDCamera extends Camera, it cannot implement hddRecord().
+    This means the subclass cannot behave like the parent class, which violates the Liskov Substitution Principle.
+
+    To fix this, we should keep the base Camera class minimal and move hddRecord() only to the HDDCamera class.
+
 ================================================================================
    I Stands for Interface Segregation Principle (ISP)
    "Don't force classes to implement things they don't use."
@@ -164,7 +230,7 @@ Only extension.
 	interface NightVisionCapable{
 		void enableNightVision();
 	}
-	interface Speaker{
+	interface microphone{
 		void communicate();
 	}
 
@@ -172,48 +238,104 @@ Only extension.
 so using this interface according we can implement with our specific cameras
 
 ================================================================================
-   D stands for Dependency Inversion Principle
+## D — Dependency Inversion Principle (DIP)
 
-   "High-level modules should depends on abstractions, not concrete classes"
-   High-level modules should not depend on low-level modules.
-   Both should depend on abstractions.
+**Definition**
 
-   And
+The **Dependency Inversion Principle** states:
 
-   Abstractions should not depend on details.
-   Details should depends on abstractions
+* **High-level modules should not depend on low-level modules.**
+* **Both should depend on abstractions.**
 
-   Example:-
-   class CameraController {
-     AwsStorage storage = new AwsStorage();
+Also:
 
-     void record(Video video){
+* **Abstractions should not depend on details.**
+* **Details should depend on abstractions.**
+
+---
+
+## Key Idea
+
+* **High-level module** → Business logic / policy
+* **Low-level module** → Implementation / technical details
+
+Examples of low-level modules:
+
+* Database
+* File storage
+* Email sender
+* SMS gateway
+* Logger
+* Payment gateway
+
+Business logic should **not directly depend on these implementations**.
+
+---
+
+# ❌ Example (Violation of DIP)
+
+```java
+class CameraController {
+
+    AwsStorage storage = new AwsStorage();
+
+    void record(Video video) {
         storage.save(video);
-     }
+    }
+}
+```
 
-   }
+### What is happening here?
 
-   what happening here ?
-   * CameraController is a high-level module (business logic)
-   * AwsStorage is a low-level module (implementation detail)
+* `CameraController` → **High-level module** (surveillance business logic)
+* `AwsStorage` → **Low-level module** (cloud storage implementation)
 
+### Problem
 
+`CameraController` is **directly dependent on AwsStorage**.
 
-✅ Correct Design
+If the storage changes to:
+
+* Azure Storage
+* Local HDD storage
+* FTP server
+* NVR storage
+
+Then **CameraController must be modified**.
+
+This creates **tight coupling**, which violates the Dependency Inversion Principle.
+
+---
+
+# ✅ Correct Design (Following DIP)
+
+First create an **abstraction**.
+
+```java
 interface Storage {
     void save(Video video);
 }
+```
 
+Then implement the abstraction.
+
+```java
 class AwsStorage implements Storage {
-    public void save(Video video) {}
+    public void save(Video video) {
+        System.out.println("Saving video to AWS");
+    }
 }
 
 class AzureStorage implements Storage {
-    public void save(Video video) {}
+    public void save(Video video) {
+        System.out.println("Saving video to Azure");
+    }
 }
+```
 
-Now inject dependency:
+Now inject the dependency.
 
+```java
 class CameraController {
 
     private Storage storage;
@@ -226,55 +348,53 @@ class CameraController {
         storage.save(video);
     }
 }
+```
 
-Usage:
+### Usage
 
-new CameraController(new AwsStorage());
-new CameraController(new AzureStorage());
+```java
+CameraController controller1 = new CameraController(new AwsStorage());
+CameraController controller2 = new CameraController(new AzureStorage());
+```
 
+Now the controller depends on **Storage abstraction**, not a specific implementation.
 
+---
 
-The Core Idea (No Code)
+# Dependency Flow
 
-High-level = policy / business rules
-Low-level = implementation / technical details
+```
+CameraController  →  Storage
+AwsStorage        →  Storage
+AzureStorage      →  Storage
+```
 
-Examples of low-level:
+All modules depend on the **abstraction**.
 
-Database
+---
 
-Email sender
+# Benefits of Following DIP
 
-SMS gateway
+If DIP is **not followed**:
 
-File storage
+* Code becomes tightly coupled
+* Switching technologies becomes difficult
+* Testing becomes harder
+* Maintenance cost increases
 
-Logger
+If DIP **is followed**:
 
-Payment gateway
+* Implementations can be swapped easily
+* Code becomes flexible
+* Unit testing becomes easier
+* System becomes easier to maintain
 
-Business logic should not be married to these.
+---
 
-Why This Matters
+# Simple Interview Explanation
 
-If you don’t follow DIP:
-
-Testing becomes hard
-
-Switching technology becomes painful
-
-Code becomes tightly coupled
-
-System becomes rigid
-
-If you follow DIP:
-
-You can swap implementations easily
-
-You can unit test using mocks
-
-System becomes flexible
-
-Maintenance cost drops
-
-
+> Dependency Inversion Principle states that high-level modules should not depend on low-level modules. Both should depend on abstractions.
+>
+> For example, in a surveillance system a `CameraController` should not directly depend on `AwsStorage`. Instead it should depend on a `Storage` interface. Different implementations like `AwsStorage` or `AzureStorage` implement this interface.
+>
+> This allows us to change the storage system without modifying the business logic.
