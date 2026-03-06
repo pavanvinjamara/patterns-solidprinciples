@@ -1,0 +1,400 @@
+  SOLID PRINCIPLES
+  ------------------
+  SOLID PRINCIPLES
+
+  These principles help us write code that is:
+
+  1) Clean
+
+  2) Flexible
+
+  3) Easy to understand
+
+  4) Easy to test
+
+  5) Easy to maintain
+
+==================================================================================
+  S stands for Single Responsibility Principle (SRP)
+  "One class ----> One Job"
+  One class need to have only one responsiblity.
+
+  Why ?
+  Ans:- Because each operation has a different reason to change.
+  Splitting improves maintainability, readabiltiy, testing and reduces
+  side effects.
+
+  Ans:- Because every responsibility has a different reason to change.
+  If one class handles multiple responsibilities, it will break for multiple reasons.
+
+
+  Let us take an example we have UserService Class have multiple jobs
+   1) Save User
+   2) sendEmail
+   3) generateReport
+
+   Now this class changes if:
+   DB changes ->(Sql to MongoDB)
+   Email logic changes
+   Report format changes
+
+
+   --------------------- Bad Example --------------------
+   class UserService{
+        public void saveUser(){
+
+        }
+        public void sendEmail(){
+
+        }
+        public void generateReport(){
+
+        }
+   }
+
+ ---------------- Good Example ------------------
+
+   class UserRepo{
+        public void save(){
+
+        }
+   }
+
+   class EmailService{
+        public void sendEmail(){
+
+        }
+   }
+
+   class ReportRepo{
+        public void generateReport(){
+
+        }
+   }
+
+
+=================================================================================*
+
+   O stands for Open/Closed Principle (ocp)
+   "Open for extension closed for modification"
+
+
+   Adding new Behaviour without rewriting the existing code.
+
+  We should not make CameraService Class
+  we make a CameraService interface we implement with brand classes
+
+Let take a scenario
+We support multiple camera brands:
+* Hikvision
+* Dahua
+* Cp Plus
+
+If we created a class
+
+class CameraService {
+   void connect(String brand){
+	   if(brand.equals("Hikvision")){
+
+	   }
+	   else if(brand.equals("Cp Plus")){
+
+	   }
+	   else if(brand.equals("Dahua")){
+
+	   }
+   }
+}
+
+for every new brand, we need to modify the class. That's Fragile.
+
+Proper Design
+We Create a interface for Cameras and we implement with specific brand classes
+
+interface CameraBrand{
+	void connect();
+}
+
+class HikivisionCamera implements CameraBrand {
+
+}
+class CpplusCamera implements CameraBrand {
+
+}
+class DahuaCamera implements CameraBrand{
+
+}
+
+No modification required.
+Only extension.
+================================================================================
+   L stands for Liskov Substitution Principle(LSP)
+   "Child classes must behave like parent classes."
+
+   Think we created a class Camera and in that we have two methods hdd recording and non-hdd recording
+
+   class Camera{
+        public void record(){
+        }
+        public void hddRecord(){
+        }
+   }
+
+   we have a hdd camera and non-hdd camera
+   class HDDCamera extends Camera{
+
+   }
+   class NonHDDCamera extends Camera{
+   }
+
+
+   If we create instance for both non hdd camera cannot implement hdd record
+   It fails there so here comes the LSP Rule
+
+   The flaw
+   You forced every camera to have hddRecord().
+   But a NonHDDCamera does not support HDD recording.
+
+   Camera cam = new NonHDDCamera();
+   cam.hddRecord();
+	Now you have only two bad choices:
+	Throw an exception ❌
+	Leave the method empty ❌
+	Both mean the child class cannot behave like the parent, which violates LSP.
+	Your reasoning is right, but the explanation should clearly show the failure.
+
+	we need to design correct----
+	class Camera {
+	    public void record() {
+	        System.out.println("Recording video");
+	    }
+	}
+
+	class HDDCamera extends Camera {
+        public void hddRecord() {
+            System.out.println("Recording to HDD");
+        }
+    }
+    class NonHDDCamera extends Camera {
+
+    }
+
+    Camera cam1 = new HDDCamera();
+    cam1.record();
+
+    Camera cam2 = new NonHDDCamera();
+    cam2.record();
+
+    HDDCamera hddCam = new HDDCamera();
+    hddCam.hddRecord();
+
+	now whether the camera is hdd or not depends on that we can use the class and not breaks lsp rule.
+
+	Suppose we design a Camera class with methods record() and hddRecord().
+    But not all cameras support HDD recording.
+    If a NonHDDCamera extends Camera, it cannot implement hddRecord().
+    This means the subclass cannot behave like the parent class, which violates the Liskov Substitution Principle.
+
+    To fix this, we should keep the base Camera class minimal and move hddRecord() only to the HDDCamera class.
+
+================================================================================
+   I Stands for Interface Segregation Principle (ISP)
+   "Don't force classes to implement things they don't use."
+
+   Suppose we have CameraService interface in that we perform some operations
+   1) Camera with mic
+   2) Camera with nightvision
+   3) Camera can rotate
+
+   we should not implement all this functionality in one interface because
+   some cameras can rotate|| availble mic || nightvision or not
+   If created by we don't use them in that but still we need to implement
+
+   so make them separate interfaces so according to that we can implement
+
+---------- BAD Example -----------
+   interface Camera{
+        void stream();
+        void rotate();
+        void enableNightvision();
+        void communicate();
+   }
+-----------Good example -------------
+
+	interface Streamble{
+	    void Stream();
+	}
+	interface Rotatable{
+		void rotate();
+	}
+	interface NightVisionCapable{
+		void enableNightVision();
+	}
+	interface microphone{
+		void communicate();
+	}
+
+
+so using this interface according we can implement with our specific cameras
+
+================================================================================
+## D — Dependency Inversion Principle (DIP)
+
+**Definition**
+
+The **Dependency Inversion Principle** states:
+
+* **High-level modules should not depend on low-level modules.**
+* **Both should depend on abstractions.**
+
+Also:
+
+* **Abstractions should not depend on details.**
+* **Details should depend on abstractions.**
+
+---
+
+## Key Idea
+
+* **High-level module** → Business logic / policy
+* **Low-level module** → Implementation / technical details
+
+Examples of low-level modules:
+
+* Database
+* File storage
+* Email sender
+* SMS gateway
+* Logger
+* Payment gateway
+
+Business logic should **not directly depend on these implementations**.
+
+---
+
+# ❌ Example (Violation of DIP)
+
+```java
+class CameraController {
+
+    AwsStorage storage = new AwsStorage();
+
+    void record(Video video) {
+        storage.save(video);
+    }
+}
+```
+
+### What is happening here?
+
+* `CameraController` → **High-level module** (surveillance business logic)
+* `AwsStorage` → **Low-level module** (cloud storage implementation)
+
+### Problem
+
+`CameraController` is **directly dependent on AwsStorage**.
+
+If the storage changes to:
+
+* Azure Storage
+* Local HDD storage
+* FTP server
+* NVR storage
+
+Then **CameraController must be modified**.
+
+This creates **tight coupling**, which violates the Dependency Inversion Principle.
+
+---
+
+# ✅ Correct Design (Following DIP)
+
+First create an **abstraction**.
+
+```java
+interface Storage {
+    void save(Video video);
+}
+```
+
+Then implement the abstraction.
+
+```java
+class AwsStorage implements Storage {
+    public void save(Video video) {
+        System.out.println("Saving video to AWS");
+    }
+}
+
+class AzureStorage implements Storage {
+    public void save(Video video) {
+        System.out.println("Saving video to Azure");
+    }
+}
+```
+
+Now inject the dependency.
+
+```java
+class CameraController {
+
+    private Storage storage;
+
+    CameraController(Storage storage) {
+        this.storage = storage;
+    }
+
+    void record(Video video) {
+        storage.save(video);
+    }
+}
+```
+
+### Usage
+
+```java
+CameraController controller1 = new CameraController(new AwsStorage());
+CameraController controller2 = new CameraController(new AzureStorage());
+```
+
+Now the controller depends on **Storage abstraction**, not a specific implementation.
+
+---
+
+# Dependency Flow
+
+```
+CameraController  →  Storage
+AwsStorage        →  Storage
+AzureStorage      →  Storage
+```
+
+All modules depend on the **abstraction**.
+
+---
+
+# Benefits of Following DIP
+
+If DIP is **not followed**:
+
+* Code becomes tightly coupled
+* Switching technologies becomes difficult
+* Testing becomes harder
+* Maintenance cost increases
+
+If DIP **is followed**:
+
+* Implementations can be swapped easily
+* Code becomes flexible
+* Unit testing becomes easier
+* System becomes easier to maintain
+
+---
+
+# Simple Interview Explanation
+
+> Dependency Inversion Principle states that high-level modules should not depend on low-level modules. Both should depend on abstractions.
+>
+> For example, in a surveillance system a `CameraController` should not directly depend on `AwsStorage`. Instead it should depend on a `Storage` interface. Different implementations like `AwsStorage` or `AzureStorage` implement this interface.
+>
+> This allows us to change the storage system without modifying the business logic.
